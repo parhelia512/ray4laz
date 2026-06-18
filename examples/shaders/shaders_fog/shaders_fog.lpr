@@ -2,7 +2,7 @@ program shaders_fog;
 
 {$mode objfpc}{$H+}
 
-uses raylib, raymath, rlights;
+uses sysutils, raylib, raymath, rlights;
 
 const
   screenWidth = 800;
@@ -17,12 +17,13 @@ var
   fogDensity: single;
   fogDensityLoc, ambientLoc,i: integer;
   locValue: array [0..3] of single;
-
+  fogColorLoc: integer;
+  fogColor: array[0..3] of single;
 begin
   // Initialization
   //--------------------------------------------------------------------------------------
   SetConfigFlags(FLAG_MSAA_4X_HINT);  // Enable Multi Sampling Anti Aliasing 4x (if available)
-  InitWindow(screenWidth, screenHeight, 'raylib - simple project');
+  InitWindow(screenWidth, screenHeight, 'raylib [shaders] example - fog rendering');
 
   // Define the camera to look into our 3d world
   Camera3DSet(@camera,
@@ -62,6 +63,12 @@ begin
   fogDensity := 0.15;
   fogDensityLoc := GetShaderLocation(shader, 'fogDensity');
   SetShaderValue(shader, fogDensityLoc, @fogDensity, SHADER_UNIFORM_FLOAT);
+
+  // Set fog color uniform
+
+  fogColorLoc := GetShaderLocation(shader, 'fogColor');
+  fogColor[0] := 0.5; fogColor[1] := 0.5; fogColor[2] := 0.5; fogColor[3] := 1.0;
+  SetShaderValue(shader, fogColorLoc, @fogColor, SHADER_UNIFORM_VEC4);
 
   // NOTE: All models share the same shader
   modelA.materials[0].shader := shader;
@@ -115,10 +122,11 @@ begin
                 DrawModel(modelB, Vector3Create( -2.6, 0, 0), 1.0, WHITE);
                 DrawModel(modelC, Vector3Create( 2.6, 0, 0), 1.0, WHITE);
 
-               for i:= -20 to 20 do
+               i := -20;
+               while i < 20 do
                begin
-
-               DrawModel(modelA,Vector3Create(i*2,0,2),1.0,White);
+                 DrawModel(modelA,Vector3Create(i,0,2),1.0,White);
+                 i := i + 2;
                end;
 
             EndMode3D();

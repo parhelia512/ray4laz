@@ -101,6 +101,7 @@ begin
       end;
 
       DrawFPS(10, 10);
+      DrawText('Press SPACE to PAUSE/RESUME', 20, GetScreenHeight() - 35, 20, LIGHTGRAY);
       EndDrawing();
     end;
   // De-Initialization

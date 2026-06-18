@@ -73,10 +73,10 @@ var
 begin
   // Initialization
   //--------------------------------------------------------------------------------------
-  InitWindow(screenWidth, screenHeight, 'raylib - simple project');
+  InitWindow(screenWidth, screenHeight, 'raylib [shaders] example - depth writing');
 
   // The shader inverts the depth buffer by writing into it by `gl_FragDepth = 1 - gl_FragCoord.z;`
-  shader := LoadShader(nil, TextFormat('resources/shaders/glsl%i/write_depth.fs', GLSL_VERSION));
+  shader := LoadShader(nil, TextFormat('resources/shaders/glsl%i/depth_write.fs', GLSL_VERSION));
 
    // Use Customized function to create writable depth texture buffer
   target := LoadRenderTextureDepthTex(screenWidth, screenHeight);

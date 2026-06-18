@@ -2,44 +2,31 @@ program models_geometric_shapes;
 
 {$mode objfpc}{$H+}
 
-uses 
-cmem, raylib;
+uses cmem, raylib;
 
 const
   screenWidth = 800;
   screenHeight = 450;
-var
-  Camera: TCamera;
 
+var
+  camera: TCamera3D;
 begin
-  // Initialization
-  //--------------------------------------------------------------------------------------
   InitWindow(screenWidth, screenHeight, 'raylib [models] example - geometric shapes');
 
-  // Define the camera to look into our 3d world
-  Camera := Camera3DCreate(
-    Vector3Create(0.0, 10.0, 10.0),
-    Vector3Create(0.0, 0.0, 0.0),
-    Vector3Create(0.0, 1.0, 0.0),
-    45.0,CAMERA_PERSPECTIVE);
+  camera.position := Vector3Create(0.0, 10.0, 10.0);
+  camera.target := Vector3Create(0.0, 0.0, 0.0);
+  camera.up := Vector3Create(0.0, 1.0, 0.0);
+  camera.fovy := 45.0;
+  camera.projection := CAMERA_PERSPECTIVE;
 
-  SetTargetFPS(60);// Set our game to run at 60 frames-per-second
-  //--------------------------------------------------------------------------------------
-  // Main game loop
+  SetTargetFPS(60);
+
   while not WindowShouldClose() do
-    begin
-      // Update
-      //----------------------------------------------------------------------------------
-      // TODO: Update your variables here
-      //----------------------------------------------------------------------------------
-
-      // Draw
-      //----------------------------------------------------------------------------------
-      BeginDrawing();
+  begin
+    BeginDrawing();
       ClearBackground(RAYWHITE);
 
-      BeginMode3D(Camera);
-
+      BeginMode3D(camera);
         DrawCube(Vector3Create(-4.0, 0.0, 2.0), 2.0, 5.0, 2.0, RED);
         DrawCubeWires(Vector3Create(-4.0, 0.0, 2.0), 2.0, 5.0, 2.0, GOLD);
         DrawCubeWires(Vector3Create(-4.0, 0.0, -2.0), 3.0, 6.0, 2.0, MAROON);
@@ -54,20 +41,15 @@ begin
         DrawCylinder(Vector3Create(1.0, 0.0, -4.0), 0.0, 1.5, 3.0, 8, GOLD);
         DrawCylinderWires(Vector3Create(1.0, 0.0, -4.0), 0.0, 1.5, 3.0, 8, PINK);
 
-        DrawCapsule     (Vector3Create(-3.0, 1.5, -4.0), Vector3Create(-4.0, -1.0, -4.0), 1.2, 8, 8, VIOLET);
+        DrawCapsule(Vector3Create(-3.0, 1.5, -4.0), Vector3Create(-4.0, -1.0, -4.0), 1.2, 8, 8, VIOLET);
         DrawCapsuleWires(Vector3Create(-3.0, 1.5, -4.0), Vector3Create(-4.0, -1.0, -4.0), 1.2, 8, 8, PURPLE);
 
-        DrawGrid(10, 1.0);        // Draw a grid
-
+        DrawGrid(10, 1.0);
       EndMode3D();
 
       DrawFPS(10, 10);
+    EndDrawing();
+  end;
 
-      EndDrawing();
-    end;
-  // De-Initialization
-  //--------------------------------------------------------------------------------------
-  CloseWindow();        // Close window and OpenGL context
-  //--------------------------------------------------------------------------------------
+  CloseWindow();
 end.
-

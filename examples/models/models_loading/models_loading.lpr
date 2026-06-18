@@ -2,125 +2,107 @@ program models_loading;
 
 {$mode objfpc}{$H+}
 
-uses 
-cmem, raylib, raymath;
+uses cmem, raylib;
 
 const
   screenWidth = 800;
   screenHeight = 450;
 
 var
-  Camera: TCamera;
-  Model: TModel;
-  Texture: TTexture;
-  Position: TVector3;
-  Bounds: TBoundingBox;
-  Selected: Boolean;
-  DroppedFiles: TFilePathList;
-
+  camera: TCamera3D;
+  model: TModel;
+  texture: TTexture2D;
+  position: TVector3;
+  bounds: TBoundingBox;
+  selected: Boolean;
+  droppedFiles: TFilePathList;
+  fp: PAnsiChar;
 begin
-  // Initialization
-  //--------------------------------------------------------------------------------------
-  InitWindow(screenWidth, screenHeight, 'raylib [models] example - models loading');
+  InitWindow(screenWidth, screenHeight, 'raylib [models] example - loading');
 
-  Camera := Default(TCamera);
-  Camera.Position := Vector3Create(50.0, 50.0, 50.0); // Camera position
-  Camera.Target := Vector3Create(0.0, 10.0, 0.0);     // Camera looking at point
-  Camera.Up := Vector3Create(0.0, 1.0, 0.0);          // Camera up vector (rotation towards target)
-  Camera.Fovy := 45.0;                                  // Camera field-of-view Y
-  Camera.Projection := CAMERA_PERSPECTIVE;              // Camera mode type
+  camera.position := Vector3Create(50.0, 50.0, 50.0);
+  camera.target := Vector3Create(0.0, 12.0, 0.0);
+  camera.up := Vector3Create(0.0, 1.0, 0.0);
+  camera.fovy := 45.0;
+  camera.projection := CAMERA_PERSPECTIVE;
 
-  Model := LoadModel(PChar(GetApplicationDirectory + 'resources/models/obj/castle.obj'));   // Load model
-  Texture := LoadTexture(PChar(GetApplicationDirectory + 'resources/models/obj/castle_diffuse.png')); // Load model texture
-  Model.Materials[0].Maps[MATERIAL_MAP_DIFFUSE].Texture := Texture;            // Set map diffuse texture
+  model := LoadModel(PChar(GetApplicationDirectory + 'resources/models/obj/castle.obj'));
+  texture := LoadTexture(PChar(GetApplicationDirectory + 'resources/models/obj/castle_diffuse.png'));
+  model.materials[0].maps[Ord(MATERIAL_MAP_DIFFUSE)].texture := texture;
 
-  Position := Vector3Create(0.0, 0.0, 0.0);                    // Set model position
-  Bounds := GetMeshBoundingBox(Model.Meshes[0]);   // Set model bounds
+  position := Vector3Create(0.0, 0.0, 0.0);
+  bounds := GetMeshBoundingBox(model.meshes[0]);
+  selected := False;
 
-  // NOTE: bounds are calculated from the original size of the model,
-  // if model is scaled on drawing, bounds must be also scaled
+  SetTargetFPS(60);
 
-  Selected := False;          // Selected object flag
- // DisableCursor;
-  SetTargetFPS(60); // Set our game to run at 60 frames-per-second
-  //--------------------------------------------------------------------------------------
-  // Main game loop
   while not WindowShouldClose() do
+  begin
+    UpdateCamera(@camera, CAMERA_ORBITAL);
+
+    if IsFileDropped() then
     begin
-      // Update
-      //-------------------------------------------------------------------------------
-      UpdateCamera(@Camera,CAMERA_FREE);
+      droppedFiles := LoadDroppedFiles();
 
-       // Load new models/textures on drag&drop
-       if IsFileDropped() then
-       begin
-         DroppedFiles := LoadDroppedFiles();
+      if droppedFiles.count = 1 then
+      begin
+        fp := droppedFiles.paths[0];
 
-         if DroppedFiles.Count = 1 then // Only support one file dropped
-         begin
-           if IsFileExtension(DroppedFiles.Paths[0], '.obj') or
-              IsFileExtension(DroppedFiles.Paths[0], '.gltf') or
-              IsFileExtension(DroppedFiles.Paths[0], '.glb') or
-              IsFileExtension(DroppedFiles.Paths[0], '.vox') or
-              IsFileExtension(DroppedFiles.Paths[0], '.iqm') or
-              IsFileExtension(DroppedFiles.Paths[0], '.m3d') then       // Model file formats supported
-           begin
-             UnloadModel(Model);                          // Unload previous model
-             Model := LoadModel(DroppedFiles.Paths[0]);   // Load new model
-             Model.Materials[0].Maps[MATERIAL_MAP_DIFFUSE].Texture := Texture; // Set current map diffuse texture
+        if IsFileExtension(fp, '.obj') or
+           IsFileExtension(fp, '.gltf') or
+           IsFileExtension(fp, '.glb') or
+           IsFileExtension(fp, '.vox') or
+           IsFileExtension(fp, '.iqm') or
+           IsFileExtension(fp, '.m3d') then
+        begin
+          UnloadModel(model);
+          model := LoadModel(fp);
+          model.materials[0].maps[Ord(MATERIAL_MAP_DIFFUSE)].texture := texture;
+          bounds := GetMeshBoundingBox(model.meshes[0]);
 
-             Bounds := GetMeshBoundingBox(Model.Meshes[0]);
+          camera.position.x := bounds.max.x + 10.0;
+          camera.position.y := bounds.max.y + 10.0;
+          camera.position.z := bounds.max.z + 10.0;
+        end
+        else if IsFileExtension(fp, '.png') then
+        begin
+          UnloadTexture(texture);
+          texture := LoadTexture(fp);
+          model.materials[0].maps[Ord(MATERIAL_MAP_DIFFUSE)].texture := texture;
+        end;
+      end;
 
-             // TODO: Move camera position from target enough distance to visualize model properly
-           end
-           else if IsFileExtension(DroppedFiles.Paths[0], '.png') then  // Texture file formats supported
-           begin
-             // Unload current model texture and load new one
-             UnloadTexture(Texture);
-             Texture := LoadTexture(DroppedFiles.Paths[0]);
-             Model.Materials[0].Maps[MATERIAL_MAP_DIFFUSE].Texture := Texture;
-           end;
-         end;
+      UnloadDroppedFiles(droppedFiles);
+    end;
 
-         UnloadDroppedFiles(droppedFiles);    // Unload filepaths from memory
-       end;
+    if IsMouseButtonPressed(MOUSE_BUTTON_LEFT) then
+    begin
+      if GetRayCollisionBox(GetScreenToWorldRay(GetMousePosition(), camera), bounds).hit then
+        selected := not selected
+      else
+        selected := False;
+    end;
 
-       // Select model on mouse click
-       if IsMouseButtonPressed(MOUSE_BUTTON_LEFT) then
-       begin
-         // Check collision between ray and box
-         if GetRayCollisionBox(GetMouseRay(GetMousePosition(), Camera), Bounds).Hit then
-           Selected := not Selected
-         else
-           Selected := False;
-       end;
-
-      // Draw
-      //----------------------------------------------------------------------------------
-      BeginDrawing();
+    BeginDrawing();
       ClearBackground(RAYWHITE);
 
-      BeginMode3D(Camera);
-        DrawModel(Model, Position, 1.0, WHITE);        // Draw 3d model with texture
-        DrawGrid(20, 10.0);         // Draw a grid
-
-        if Selected then
-          DrawBoundingBox(Bounds, GREEN);   // Draw selection box
+      BeginMode3D(camera);
+        DrawModel(model, position, 1.0, WHITE);
+        DrawGrid(20, 10.0);
+        if selected then DrawBoundingBox(bounds, GREEN);
       EndMode3D();
 
       DrawText('Drag & drop model to load mesh/texture.', 10, GetScreenHeight() - 20, 10, DARKGRAY);
-      if Selected then
-        DrawText('MODEL SELECTED', GetScreenWidth() - 110, 10, 10, GREEN);
+      if selected then DrawText('MODEL SELECTED', GetScreenWidth() - 110, 10, 10, GREEN);
 
-      DrawText('(c) Castle 3D model by Alberto Cano', ScreenWidth - 200, ScreenHeight - 20, 10, GRAY);
+      DrawText('(c) Castle 3D model by Alberto Cano', screenWidth - 200, screenHeight - 20, 10, GRAY);
 
       DrawFPS(10, 10);
+    EndDrawing();
+  end;
 
-      EndDrawing();
-    end;
-  // De-Initialization
-  //--------------------------------------------------------------------------------------
-  CloseWindow();        // Close window and OpenGL context
-  //--------------------------------------------------------------------------------------
+  UnloadTexture(texture);
+  UnloadModel(model);
+
+  CloseWindow();
 end.
-

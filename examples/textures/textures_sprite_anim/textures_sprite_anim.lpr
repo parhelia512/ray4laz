@@ -21,7 +21,7 @@ var
 begin
   // Initialization
   //--------------------------------------------------------------------------------------
-  InitWindow(ScreenWidth, ScreenHeight, 'raylib [textures] example - background scrolling');
+  InitWindow(ScreenWidth, ScreenHeight, 'raylib [textures] example - sprite animation');
 
   // NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
   Scarfy := LoadTexture(PChar(GetApplicationDirectory + 'resources/scarfy.png'));        // Texture loading

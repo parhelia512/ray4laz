@@ -137,8 +137,8 @@ begin
                        RectangleCreate(0, 0, Map.TilesX * MAP_TILE_SIZE, Map.TilesY * MAP_TILE_SIZE),
                        Vector2Create(0, 0), 0.0, WHITE);
 
-        // Draw player current tile
         DrawText(TextFormat('Current tile: [%i,%i]', PlayerTileX, PlayerTileY), 10, 10, 20, LIME);
+        DrawText('ARROW KEYS to move', 10, GetScreenHeight() - 25, 20, RAYWHITE);
 
       EndDrawing();
        end;

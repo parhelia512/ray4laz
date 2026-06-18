@@ -1,6 +1,6 @@
 {*******************************************************************************************
 *
-*   raylib [shaders] example - Raymarching shapes generation
+*   raylib [shaders] example - Raymarching rendering
 *
 *   NOTE: This example requires raylib OpenGL 3.3 for shaders support and only #version 330
 *         is currently supported. OpenGL ES 2.0 platforms are not supported at the moment.
@@ -16,37 +16,32 @@ program shaders_raymarching;
 
 {$mode objfpc}{$H+}
 
-uses cmem,raylib;
+uses cmem, sysutils, raylib;
 
 const
+  GLSL_VERSION = 330;
 
- GLSL_VERSION  =330;
-
- var
-    screenWidth: integer = 800;
-   screenHeight: integer = 450;
-   camera:TCamera;
-   shader:TShader;
-   viewEyeLoc,viewCenterLoc,runTimeLoc,resolutionLoc: integer;
-   resolution: array[1..2] of single;// = (screenWidth,screenHeight);
-   cameraPos: array[1..3] of single;// = ( camera.position.x, camera.position.y, camera.position.z );
-   cameraTarget: array[1..3] of single;// = ( camera.target.x, camera.target.y, camera.target.z );
-   runTime,deltaTime:single;
+var
+  screenWidth: integer = 800;
+  screenHeight: integer = 450;
+  camera: TCamera;
+  shader: TShader;
+  viewEyeLoc, viewCenterLoc, runTimeLoc, resolutionLoc: integer;
+  resolution: array[1..2] of single;
+  cameraPos: array[1..3] of single;
+  cameraTarget: array[1..3] of single;
+  runTime, deltaTime: single;
 
 begin
- SetConfigFlags(FLAG_WINDOW_RESIZABLE);
- InitWindow(screenWidth, screenHeight, 'raylib [shaders] example - raymarching shapes');
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+  InitWindow(screenWidth, screenHeight, 'raylib [shaders] example - raymarching rendering');
 
- Camera3DSet(@camera,Vector3Create(2.5,2.5,3.0),
-                     Vector3Create(0.0,0.0,0.7),
-                     Vector3Create(0.0,1.0,00.0),65,CAMERA_PERSPECTIVE);
+  Camera3DSet(@camera, Vector3Create(2.5, 2.5, 3.0),
+                      Vector3Create(0.0, 0.0, 0.7),
+                      Vector3Create(0.0, 1.0, 0.0), 65, CAMERA_PERSPECTIVE);
 
+  shader := LoadShader(nil, TextFormat('resources/shaders/glsl%i/raymarching.fs', GLSL_VERSION));
 
- // Load raymarching shader
- // NOTE: Defining 0 (NULL) for vertex shader forces usage of internal default vertex shader
- shader := LoadShader(nil, TextFormat('resources/shaders/glsl%i/raymarching.fs', GLSL_VERSION));
-
- // Get shader locations for required uniforms
   viewEyeLoc := GetShaderLocation(shader, 'viewEye');
   viewCenterLoc := GetShaderLocation(shader, 'viewCenter');
   runTimeLoc := GetShaderLocation(shader, 'runTime');
@@ -58,52 +53,48 @@ begin
   SetShaderValue(shader, resolutionLoc, @resolution, SHADER_UNIFORM_VEC2);
 
   runTime := 0.0;
+
+  DisableCursor();
   SetTargetFPS(60);
 
- while not WindowShouldClose() do 
- begin
-  // Update
-  cameraPos[1]:= camera.position.x;
-  cameraPos[2]:= camera.position.y;
-  cameraPos[3]:= camera.position.z;
-  cameraTarget[3]:= camera.target.x;
-  cameraTarget[3]:= camera.target.y;
-  cameraTarget[3]:= camera.target.z;
+  while not WindowShouldClose() do
+  begin
+    UpdateCamera(@camera, CAMERA_FIRST_PERSON);
 
-  deltaTime := GetFrameTime();
-  runTime += deltaTime;
+    cameraPos[1] := camera.position.x;
+    cameraPos[2] := camera.position.y;
+    cameraPos[3] := camera.position.z;
+    cameraTarget[1] := camera.target.x;
+    cameraTarget[2] := camera.target.y;
+    cameraTarget[3] := camera.target.z;
 
-        // Set shader required uniform values
-        SetShaderValue(shader, viewEyeLoc, @cameraPos, SHADER_UNIFORM_VEC3);
-        SetShaderValue(shader, viewCenterLoc, @cameraTarget, SHADER_UNIFORM_VEC3);
-        SetShaderValue(shader, runTimeLoc, @runTime, SHADER_UNIFORM_FLOAT);
+    deltaTime := GetFrameTime();
+    runTime += deltaTime;
 
-        // Check if screen is resized
-        if IsWindowResized then
-        begin
-            screenWidth := GetScreenWidth();
-            screenHeight := GetScreenHeight();
-            resolution[1] :=screenWidth; { (float)screenWidth, (float)screenHeight };
-            resolution[2] := screenHeight;
-            SetShaderValue(shader, resolutionLoc, @resolution, SHADER_UNIFORM_VEC2);
-        end;
-  //Draw
-  BeginDrawing();
-  ClearBackground(RAYWHITE);
+    SetShaderValue(shader, viewEyeLoc, @cameraPos, SHADER_UNIFORM_VEC3);
+    SetShaderValue(shader, viewCenterLoc, @cameraTarget, SHADER_UNIFORM_VEC3);
+    SetShaderValue(shader, runTimeLoc, @runTime, SHADER_UNIFORM_FLOAT);
 
-  // We only draw a white full-screen rectangle,
-  // frame is generated in shader using raymarching
-  BeginShaderMode(shader);
-  DrawRectangle(0, 0, screenWidth, screenHeight, WHITE);
-  EndShaderMode();
+    if IsWindowResized then
+    begin
+      screenWidth := GetScreenWidth();
+      screenHeight := GetScreenHeight();
+      resolution[1] := screenWidth;
+      resolution[2] := screenHeight;
+      SetShaderValue(shader, resolutionLoc, @resolution, SHADER_UNIFORM_VEC2);
+    end;
 
-  DrawText('(c) Raymarching shader by Iñigo Quilez. MIT License.', screenWidth - 280, screenHeight - 20, 10, BLACK);
-  DrawFps(10,10);
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
 
-  EndDrawing(); 
- end;
-  UnloadShader(shader);           // Unload shader
+    BeginShaderMode(shader);
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), WHITE);
+    EndShaderMode();
+
+    DrawText('(c) Raymarching shader by Iñigo Quilez. MIT License.', GetScreenWidth() - 280, GetScreenHeight() - 20, 10, BLACK);
+
+    EndDrawing();
+  end;
+  UnloadShader(shader);
   CloseWindow();
-
 end.
-

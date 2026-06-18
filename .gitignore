@@ -21,7 +21,7 @@ build/raygui/
 build/r3d/
 build/assimp/
 build/raylib-media/
-
+build_log/
 # macos
 .DS_Store
 #*.dylib

@@ -2,92 +2,108 @@ program textures_bunnymark;
 
 {$mode objfpc}{$H+}
 
-uses cmem, raylib, math;
-
-type
- TBunny = record
-    position:TVector2;
-    speed:TVector2;
-    color:TColorB;
-  end;
+uses
+  cmem, sysutils, raylib, math;
 
 const
- screenWidth = 800;
- screenHeight = 450;
- MAX_BUNNIES = 50000;    // 50K bunnies limit
- MAX_BATCH_ELEMENTS=8192;
+  screenWidth = 800;
+  screenHeight = 450;
+  MAX_BUNNIES = 80000;          // 80K bunnies limit
+  MAX_BATCH_ELEMENTS = 8192;
+
+type
+  TBunny = record
+    position: TVector2;
+    speed: TVector2;
+    color: TColorB;
+  end;
+
 var
-  bunnies: array [0 .. (MAX_BUNNIES) ] of TBunny; // Bunnies array
-  bunniesCount:integer=0; // Bunnies counter
-  texBunny: TTexture2d;
-  i:integer;
+  bunnies: array[0..MAX_BUNNIES - 1] of TBunny;  // Bunnies array
+  bunniesCount: Integer;
+  texBunny: TTexture2D;
+  i: Integer;
+  paused: Boolean;
 
 begin
-{$IFDEF DARWIN}
-SetExceptionMask([exDenormalized,exInvalidOp,exOverflow,exPrecision,exUnderflow,exZeroDivide]);
-{$IFEND}
+  InitWindow(screenWidth, screenHeight, 'raylib [textures] example - bunnymark');
 
- InitWindow(screenWidth, screenHeight, 'raylib [textures] example - bunnymark');
-// SetTargetFPS(144);
- // Load bunny texture
- texBunny := LoadTexture(PChar(GetApplicationDirectory + 'resources/wabbit_alpha.png'));
+  // Load bunny texture
+  texBunny := LoadTexture(PChar(GetApplicationDirectory + 'resources/raybunny.png'));
 
+  bunniesCount := 0;
+  paused := False;
 
- while not WindowShouldClose() do 
- begin
-  // update
-  if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) then
+  // Main game loop
+  while not WindowShouldClose() do
+  begin
+    // Update
+    if IsMouseButtonDown(MOUSE_BUTTON_LEFT) then
+    begin
+      // Create more bunnies
+      for i := 0 to 99 do
+      begin
+        if bunniesCount < MAX_BUNNIES then
         begin
-            // Create more bunnies
-            for i:=0 to 100 do
-            begin
-                if (bunniesCount < MAX_BUNNIES) then
-                begin
-                    bunnies[bunniesCount].position := GetMousePosition();
-                    bunnies[bunniesCount].speed.x := Single(GetRandomValue(-250, 250)/60.0);
-                    bunnies[bunniesCount].speed.y := Single(GetRandomValue(-250, 250)/60.0);
-                    //bunnies[bunniesCount].color :=
-                    ColorSet(@bunnies[bunniesCount].color,
-                    GetRandomValue(50, 240),
-                    GetRandomValue(80, 240),
-                    GetRandomValue(100, 240), 255) ;
-                    if bunniesCount < MAX_BUNNIES  then inc(bunniesCount);
-                end;
-          end;
+          bunnies[bunniesCount].position := GetMousePosition();
+          bunnies[bunniesCount].speed.x := GetRandomValue(-250, 250);
+          bunnies[bunniesCount].speed.y := GetRandomValue(-250, 250);
+          bunnies[bunniesCount].color := ColorCreate(
+            GetRandomValue(50, 240),
+            GetRandomValue(80, 240),
+            GetRandomValue(100, 240),
+            255
+          );
+          Inc(bunniesCount);
         end;
-  //
-  // Update bunnies
-        for i:=0 to  bunniesCount do
-        begin
-            bunnies[i].position.x:=bunnies[i].position.x+ bunnies[i].speed.x;
-            bunnies[i].position.y:=bunnies[i].position.y+ bunnies[i].speed.y;
+      end;
+    end;
 
-            if (((bunnies[i].position.x + texBunny.width/2) > GetScreenWidth()) or
-                ((bunnies[i].position.x + texBunny.width/2) < 0)) then bunnies[i].speed.x *= -1;
-            if (((bunnies[i].position.y + texBunny.height/2) > GetScreenHeight()) or
-                ((bunnies[i].position.y + texBunny.height/2 - 40) < 0)) then bunnies[i].speed.y *= -1;
-        end;
+    if IsKeyPressed(KEY_P) then paused := not paused;
 
-  BeginDrawing();
-  ClearBackground(RAYWHITE);
+    if not paused then
+    begin
+      // Update bunnies
+      for i := 0 to bunniesCount - 1 do
+      begin
+        bunnies[i].position.x := bunnies[i].position.x + bunnies[i].speed.x * GetFrameTime();
+        bunnies[i].position.y := bunnies[i].position.y + bunnies[i].speed.y * GetFrameTime();
 
-  for i:= 0 to bunniesCount do
-                // NOTE: When internal batch buffer limit is reached (MAX_BATCH_ELEMENTS),
-                // a draw call is launched and buffer starts being filled again;
-                // before issuing a draw call, updated vertex data from internal CPU buffer is send to GPU...
-                // Process of sending data is costly and it could happen that GPU data has not been completely
-                // processed for drawing while new data is tried to be sent (updating current in-use buffers)
-                // it could generates a stall and consequently a frame drop, limiting the number of drawn bunnies
-                DrawTexture(texBunny,round(bunnies[i].position.x),round(bunnies[i].position.y), bunnies[i].color);
+        if ((bunnies[i].position.x + texBunny.width / 2) > GetScreenWidth()) or
+           ((bunnies[i].position.x + texBunny.width / 2) < 0) then
+          bunnies[i].speed.x := -bunnies[i].speed.x;
 
-            DrawRectangle(0, 0, screenWidth, 40, BLACK);
-            DrawText(TextFormat('bunnies: %i', bunniesCount), 120, 10, 20, GREEN);
-            DrawText(TextFormat('batched draw calls: %i', 1 + bunniesCount div MAX_BATCH_ELEMENTS), 320, 10, 20, MAROON);
-            DrawFPS(10, 10);
-  EndDrawing();
- end;
+        if ((bunnies[i].position.y + texBunny.height / 2) > GetScreenHeight()) or
+           ((bunnies[i].position.y + texBunny.height / 2 - 40) < 0) then
+          bunnies[i].speed.y := -bunnies[i].speed.y;
+      end;
+    end;
 
-    UnloadTexture(texBunny);    // Unload bunny texture
-    CloseWindow();              // Close window and OpenGL context
+    // Draw
+    BeginDrawing();
+      ClearBackground(RAYWHITE);
+
+      for i := 0 to bunniesCount - 1 do
+      begin
+        // NOTE: When internal batch buffer limit is reached (MAX_BATCH_ELEMENTS),
+        // a draw call is launched and buffer starts being filled again
+        DrawTexture(texBunny,
+          Round(bunnies[i].position.x),
+          Round(bunnies[i].position.y),
+          bunnies[i].color
+        );
+      end;
+
+      DrawRectangle(0, 0, screenWidth, 40, BLACK);
+      DrawText(PChar(Format('bunnies: %d', [bunniesCount])), 120, 10, 20, GREEN);
+      DrawText(PChar(Format('batched draw calls: %d', [1 + bunniesCount div MAX_BATCH_ELEMENTS])), 320, 10, 20, MAROON);
+
+      DrawFPS(10, 10);
+
+    EndDrawing();
+  end;
+
+  // De-Initialization
+  UnloadTexture(texBunny);
+  CloseWindow();
 end.
-

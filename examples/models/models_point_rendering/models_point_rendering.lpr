@@ -17,12 +17,12 @@ program models_point_rendering;
 
 {$mode objfpc}{$H+}
 
-uses 
-cmem, 
+uses
+cmem,
 {uncomment if necessary}
-//raymath, 
-//rlgl, 
-raylib, math;
+//raymath,
+//rlgl,
+raylib, math, rlgl;
 
 const
   screenWidth = 800;
@@ -81,7 +81,14 @@ var
   mesh: TMesh;
   model: TModel;
   color: TColorB;
-
+  procedure DrawModelPoints(model: TModel; position: TVector3; scale: Single; tint: TColorB);
+begin
+  rlEnablePointMode();
+  rlDisableBackfaceCulling();
+  DrawModel(model, position, scale, tint);
+  rlEnableBackfaceCulling();
+  rlDisablePointMode();
+end;
 begin
   // Initialization
   InitWindow(screenWidth, screenHeight, 'raylib [models] example - point rendering');
@@ -129,7 +136,7 @@ begin
         model := LoadModelFromMesh(mesh);
         numPointsChanged := false;
       end;
-      
+
       // Draw
       BeginDrawing();
         ClearBackground(BLACK);

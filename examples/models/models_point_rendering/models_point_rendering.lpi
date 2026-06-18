@@ -7,14 +7,15 @@
         <MainUnitHasCreateFormStatements Value="False"/>
         <MainUnitHasTitleStatement Value="False"/>
         <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
       <Title Value="models_point_rendering"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
-    <BuildModes>
-      <Item Name="Default" Default="True"/>
+    <BuildModes Count="1">
+      <Item1 Name="Default" Default="True"/>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -23,16 +24,16 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <RequiredPackages>
-      <Item>
+    <RequiredPackages Count="1">
+      <Item1>
         <PackageName Value="ray4laz"/>
-      </Item>
+      </Item1>
     </RequiredPackages>
-    <Units>
-      <Unit>
+    <Units Count="1">
+      <Unit0>
         <Filename Value="models_point_rendering.lpr"/>
         <IsPartOfProject Value="True"/>
-      </Unit>
+      </Unit0>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -46,21 +47,22 @@
     </SearchPaths>
     <Linking>
       <Debugging>
+        <GenerateDebugInfo Value="False"/>
         <DebugInfoType Value="dsDwarf3"/>
       </Debugging>
     </Linking>
   </CompilerOptions>
   <Debugging>
-    <Exceptions>
-      <Item>
+    <Exceptions Count="3">
+      <Item1>
         <Name Value="EAbort"/>
-      </Item>
-      <Item>
+      </Item1>
+      <Item2>
         <Name Value="ECodetoolError"/>
-      </Item>
-      <Item>
+      </Item2>
+      <Item3>
         <Name Value="EFOpenError"/>
-      </Item>
+      </Item3>
     </Exceptions>
   </Debugging>
 </CONFIG>

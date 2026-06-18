@@ -33,14 +33,14 @@ begin
   InitWindow(screenWidth, screenHeight, 'raylib [text] example - raylib fonts');
 
   // NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
-  Fonts[0] := LoadFont(PChar(GetApplicationDirectory + 'resources/fonts/alagard.png'));
-  Fonts[1] := LoadFont(PChar(GetApplicationDirectory + 'resources/fonts/pixelplay.png'));
-  Fonts[2] := LoadFont(PChar(GetApplicationDirectory + 'resources/fonts/mecha.png'));
-  Fonts[3] := LoadFont(PChar(GetApplicationDirectory + 'resources/fonts/setback.png'));
-  Fonts[4] := LoadFont(PChar(GetApplicationDirectory + 'resources/fonts/romulus.png'));
-  Fonts[5] := LoadFont(PChar(GetApplicationDirectory + 'resources/fonts/pixantiqua.png'));
-  Fonts[6] := LoadFont(PChar(GetApplicationDirectory + 'resources/fonts/alpha_beta.png'));
-  Fonts[7] := LoadFont(PChar(GetApplicationDirectory + 'resources/fonts/jupiter_crash.png'));
+  Fonts[0] := LoadFont(PChar(GetApplicationDirectory + 'resources/sprite_fonts/alagard.png'));
+  Fonts[1] := LoadFont(PChar(GetApplicationDirectory + 'resources/sprite_fonts/pixelplay.png'));
+  Fonts[2] := LoadFont(PChar(GetApplicationDirectory + 'resources/sprite_fonts/mecha.png'));
+  Fonts[3] := LoadFont(PChar(GetApplicationDirectory + 'resources/sprite_fonts/setback.png'));
+  Fonts[4] := LoadFont(PChar(GetApplicationDirectory + 'resources/sprite_fonts/romulus.png'));
+  Fonts[5] := LoadFont(PChar(GetApplicationDirectory + 'resources/sprite_fonts/pixantiqua.png'));
+  Fonts[6] := LoadFont(PChar(GetApplicationDirectory + 'resources/sprite_fonts/alpha_beta.png'));
+  Fonts[7] := LoadFont(PChar(GetApplicationDirectory + 'resources/sprite_fonts/jupiter_crash.png'));
 
   for I := 0 to MAX_FONTS - 1 do
   begin
@@ -70,7 +70,7 @@ begin
       BeginDrawing();
       ClearBackground(RAYWHITE);
 
-       DrawText(UTF8String('free fonts included with raylib'), 250, 20, 20, DARKGRAY);
+       DrawText(UTF8String('free sprite fonts included with raylib'), 250, 20, 20, DARKGRAY);
        DrawLine(220, 50, 590, 50, DARKGRAY);
 
        for I := 0 to MAX_FONTS - 1 do

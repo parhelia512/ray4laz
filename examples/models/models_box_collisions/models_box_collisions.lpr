@@ -2,123 +2,96 @@ program models_box_collisions;
 
 {$mode objfpc}{$H+}
 
-uses 
-cmem, 
-{uncomment if necessary}
-//raymath, 
-//rlgl, 
-raylib; 
+uses cmem, raylib;
 
 const
   screenWidth = 800;
   screenHeight = 450;
-var
-  Camera: TCamera;
-  PlayerPosition, PlayerSize: TVector3;
-  PlayerColor: TColor;
-  EnemyBoxPos, EnemyBoxSize, EnemySpherePos: TVector3;
-  EnemySphereSize: Single;
-  Collision: Boolean;
 
+var
+  camera: TCamera3D;
+  playerPosition: TVector3;
+  playerSize: TVector3;
+  playerColor: TColorB;
+  enemyBoxPos: TVector3;
+  enemyBoxSize: TVector3;
+  enemySpherePos: TVector3;
+  enemySphereSize: single;
+  collision: boolean;
+  playerBox: TBoundingBox;
+  enemyBox: TBoundingBox;
 begin
-  // Initialization
-  //--------------------------------------------------------------------------------------
   InitWindow(screenWidth, screenHeight, 'raylib [models] example - box collisions');
 
-  Camera := Camera3DCreate(
-     Vector3Create(0.0, 10.0, 10.0),
-     Vector3Create(0.0, 0.0, 0.0),
-     Vector3Create(0.0, 1.0, 0.0),
-     45.0, 0);
+  camera.position := Vector3Create(0.0, 10.0, 10.0);
+  camera.target := Vector3Create(0.0, 0.0, 0.0);
+  camera.up := Vector3Create(0.0, 1.0, 0.0);
+  camera.fovy := 45.0;
+  camera.projection := CAMERA_PERSPECTIVE;
 
-   PlayerPosition := Vector3Create(0.0, 1.0, 2.0);
-   PlayerSize := Vector3Create(1.0, 2.0, 1.0);
-   PlayerColor := GREEN;
+  playerPosition := Vector3Create(0.0, 1.0, 2.0);
+  playerSize := Vector3Create(1.0, 2.0, 1.0);
+  playerColor := GREEN;
 
-   EnemyBoxPos := Vector3Create(-4.0, 1.0, 0.0);
-   EnemyBoxSize := Vector3Create(2.0, 2.0, 2.0);
+  enemyBoxPos := Vector3Create(-4.0, 1.0, 0.0);
+  enemyBoxSize := Vector3Create(2.0, 2.0, 2.0);
 
-   EnemySpherePos := Vector3Create(4.0, 0.0, 0.0);
-   EnemySphereSize := 1.5;
+  enemySpherePos := Vector3Create(4.0, 0.0, 0.0);
+  enemySphereSize := 1.5;
 
-  SetTargetFPS(60);// Set our game to run at 60 frames-per-second
-  //--------------------------------------------------------------------------------------
-  // Main game loop
+  collision := false;
+
+  SetTargetFPS(60);
+
   while not WindowShouldClose() do
-    begin
-      // Update
-      //----------------------------------------------------------------------------------
-      // Move player
-      if IsKeyDown(KEY_RIGHT) then
-        PlayerPosition.X := PlayerPosition.X + 0.2
-      else if IsKeyDown(KEY_LEFT) then
-        PlayerPosition.X := PlayerPosition.X - 0.2
-      else if IsKeyDown(KEY_DOWN) then
-        PlayerPosition.Z := PlayerPosition.Z + 0.2
-      else if IsKeyDown(KEY_UP) then
-        PlayerPosition.Z := PlayerPosition.Z - 0.2;
+  begin
+    if IsKeyDown(KEY_RIGHT) then playerPosition.x := playerPosition.x + 0.2
+    else if IsKeyDown(KEY_LEFT) then playerPosition.x := playerPosition.x - 0.2
+    else if IsKeyDown(KEY_DOWN) then playerPosition.z := playerPosition.z + 0.2
+    else if IsKeyDown(KEY_UP) then playerPosition.z := playerPosition.z - 0.2;
 
-      Collision := False;
+    collision := false;
 
-      // Check collisions player vs enemy-box
-      if CheckCollisionBoxes(
-        BoundingBoxCreate(
-          Vector3Create(PlayerPosition.X - PlayerSize.X / 2, PlayerPosition.Y - PlayerSize.Y / 2, PlayerPosition.Z - PlayerSize.Z / 2),
-          Vector3Create(PlayerPosition.X + PlayerSize.X / 2, PlayerPosition.Y + PlayerSize.Y / 2, PlayerPosition.Z + PlayerSize.Z / 2)
-        ),
-        BoundingBoxCreate(
-          Vector3Create(EnemyBoxPos.X - EnemyBoxSize.X / 2, EnemyBoxPos.Y - EnemyBoxSize.Y / 2, EnemyBoxPos.Z - EnemyBoxSize.Z / 2),
-          Vector3Create(EnemyBoxPos.X + enemyBoxSize.X / 2, EnemyBoxPos.Y + EnemyBoxSize.Y / 2, EnemyBoxPos.Z + EnemyBoxSize.Z / 2)
-        )
-      ) then Collision := True;
+    playerBox.min := Vector3Create(playerPosition.x - playerSize.x/2,
+                                   playerPosition.y - playerSize.y/2,
+                                   playerPosition.z - playerSize.z/2);
+    playerBox.max := Vector3Create(playerPosition.x + playerSize.x/2,
+                                   playerPosition.y + playerSize.y/2,
+                                   playerPosition.z + playerSize.z/2);
 
-      // Check collisions player vs enemy-sphere
-      if CheckCollisionBoxSphere(
-        BoundingBoxCreate(
-          Vector3Create(PlayerPosition.X - PlayerSize.X / 2, PlayerPosition.Y - PlayerSize.Y / 2, PlayerPosition.Z - PlayerSize.Z / 2),
-          Vector3Create(PlayerPosition.X + PlayerSize.X / 2, PlayerPosition.Y + PlayerSize.Y / 2, PlayerPosition.Z + PlayerSize.Z / 2)
-        ),
-        EnemySpherePos,
-        EnemySphereSize
-      ) then Collision := True;
+    enemyBox.min := Vector3Create(enemyBoxPos.x - enemyBoxSize.x/2,
+                                  enemyBoxPos.y - enemyBoxSize.y/2,
+                                  enemyBoxPos.z - enemyBoxSize.z/2);
+    enemyBox.max := Vector3Create(enemyBoxPos.x + enemyBoxSize.x/2,
+                                  enemyBoxPos.y + enemyBoxSize.y/2,
+                                  enemyBoxPos.z + enemyBoxSize.z/2);
 
-      if Collision then
-        PlayerColor := RED
-      else
-        PlayerColor := GREEN;
+    if CheckCollisionBoxes(playerBox, enemyBox) then collision := true;
+    if CheckCollisionBoxSphere(playerBox, enemySpherePos, enemySphereSize) then collision := true;
 
-      //----------------------------------------------------------------------------------
+    if collision then playerColor := RED
+    else playerColor := GREEN;
 
-      // Draw
-      //----------------------------------------------------------------------------------
-      BeginDrawing();
+    BeginDrawing();
       ClearBackground(RAYWHITE);
 
-      BeginMode3D(Camera);
+      BeginMode3D(camera);
+        DrawCube(enemyBoxPos, enemyBoxSize.x, enemyBoxSize.y, enemyBoxSize.z, GRAY);
+        DrawCubeWires(enemyBoxPos, enemyBoxSize.x, enemyBoxSize.y, enemyBoxSize.z, DARKGRAY);
 
-        // Draw enemy-box
-        DrawCube(EnemyBoxPos, EnemyBoxSize.X, EnemyBoxSize.Y, EnemyBoxSize.Z, GRAY);
-        DrawCubeWires(EnemyBoxPos, EnemyBoxSize.X, EnemyBoxSize.Y, EnemyBoxSize.Z, DARKGRAY);
+        DrawSphere(enemySpherePos, enemySphereSize, GRAY);
+        DrawSphereWires(enemySpherePos, enemySphereSize, 16, 16, DARKGRAY);
 
-        // Draw enemy-sphere
-        DrawSphere(EnemySpherePos, enemySphereSize, GRAY);
-        DrawSphereWires(EnemySpherePos, EnemySphereSize, 16, 16, DARKGRAY);
+        DrawCubeV(playerPosition, playerSize, playerColor);
 
-        // Draw player
-        DrawCubeV(PlayerPosition, PlayerSize, PlayerColor);
-
-        DrawGrid(10, 1.0);        // Draw a grid
-
+        DrawGrid(10, 1.0);
       EndMode3D();
 
-      DrawText(UTF8String('Move player with cursors to collide'), 220, 40, 20, GRAY);
+      DrawText('Move player with arrow keys to collide', 220, 40, 20, GRAY);
 
       DrawFPS(10, 10);
-      EndDrawing();
-    end;
-  // De-Initialization
-  //--------------------------------------------------------------------------------------
-  CloseWindow();        // Close window and OpenGL context
-  //--------------------------------------------------------------------------------------
-end.
+    EndDrawing();
+  end;
 
+  CloseWindow();
+end.

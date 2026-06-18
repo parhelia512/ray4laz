@@ -47,21 +47,16 @@
     </SearchPaths>
     <Linking>
       <Debugging>
+        <GenerateDebugInfo Value="False"/>
         <DebugInfoType Value="dsDwarf3"/>
       </Debugging>
     </Linking>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">
-      <Item1>
-        <Name Value="EAbort"/>
-      </Item1>
-      <Item2>
-        <Name Value="ECodetoolError"/>
-      </Item2>
-      <Item3>
-        <Name Value="EFOpenError"/>
-      </Item3>
+      <Item1><Name Value="EAbort"/></Item1>
+      <Item2><Name Value="ECodetoolError"/></Item2>
+      <Item3><Name Value="EFOpenError"/></Item3>
     </Exceptions>
   </Debugging>
 </CONFIG>

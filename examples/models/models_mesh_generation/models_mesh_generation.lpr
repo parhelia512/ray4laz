@@ -2,175 +2,169 @@ program models_mesh_generation;
 
 {$mode objfpc}{$H+}
 
-uses 
-cmem, 
-{uncomment if necessary}
-//raymath, 
-//rlgl, 
-raylib; 
+uses
+  cmem, raylib, sysutils;
 
 const
   screenWidth = 800;
   screenHeight = 450;
-  NUM_MODELS = 9; // Parametric 3d shapes to generate
+  NUM_MODELS = 9;
+
+// Generate a simple triangle mesh from code
+function GenMeshCustom: TMesh;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+
+  Result.triangleCount := 1;
+  Result.vertexCount := Result.triangleCount * 3;
+
+  // Allocate memory for vertex data
+  Result.vertices := GetMem(Result.vertexCount * 3 * SizeOf(Single));
+  Result.texcoords := GetMem(Result.vertexCount * 2 * SizeOf(Single));
+  Result.normals := GetMem(Result.vertexCount * 3 * SizeOf(Single));
+
+  // Vertex at (0, 0, 0)
+  Result.vertices[0] := 0.0;
+  Result.vertices[1] := 0.0;
+  Result.vertices[2] := 0.0;
+  Result.normals[0] := 0.0;
+  Result.normals[1] := 1.0;
+  Result.normals[2] := 0.0;
+  Result.texcoords[0] := 0.0;
+  Result.texcoords[1] := 0.0;
+
+  // Vertex at (1, 0, 2)
+  Result.vertices[3] := 1.0;
+  Result.vertices[4] := 0.0;
+  Result.vertices[5] := 2.0;
+  Result.normals[3] := 0.0;
+  Result.normals[4] := 1.0;
+  Result.normals[5] := 0.0;
+  Result.texcoords[2] := 0.5;
+  Result.texcoords[3] := 1.0;
+
+  // Vertex at (2, 0, 0)
+  Result.vertices[6] := 2.0;
+  Result.vertices[7] := 0.0;
+  Result.vertices[8] := 0.0;
+  Result.normals[6] := 0.0;
+  Result.normals[7] := 1.0;
+  Result.normals[8] := 0.0;
+  Result.texcoords[4] := 1.0;
+  Result.texcoords[5] := 0.0;
+
+  // Upload mesh data from CPU (RAM) to GPU (VRAM) memory
+  UploadMesh(@Result, False);
+
+  Result := Result;
+end;
 
 var
-  Camera: TCamera;
-  Checked: TImage;
-  Texture: TTexture2D;
-  Models: array [0..NUM_MODELS-1] of TModel;
-  I: Integer;
-  Position: TVector3;
-  CurrentModel: Integer;
-
-  function GenMeshCustom(): TMesh; // Generate a simple triangle mesh from code
-  begin
-    Result := Default(TMesh);
-    Result.TriangleCount := 1;
-    Result.VertexCount := Result.TriangleCount * 3;
-    Result.Vertices := MemAlloc(Result.VertexCount * 3 * SizeOf(Single));    // 3 vertices, 3 coordinates each (x, y, z)
-    Result.Texcoords := MemAlloc(Result.VertexCount * 2 * SizeOf(Single));   // 3 vertices, 2 coordinates each (x, y)
-    Result.Normals := MemAlloc(Result.VertexCount * 3 * SizeOf(Single));     // 3 vertices, 3 coordinates each (x, y, z)
-
-    // Vertex at (0, 0, 0)
-    Result.Vertices[0] := 0;
-    Result.Vertices[1] := 0;
-    Result.Vertices[2] := 0;
-    Result.Normals[0] := 0;
-    Result.Normals[1] := 1;
-    Result.Normals[2] := 0;
-    Result.Texcoords[0] := 0;
-    Result.Texcoords[1] := 0;
-
-    // Vertex at (1, 0, 2)
-    Result.Vertices[3] := 1;
-    Result.Vertices[4] := 0;
-    Result.Vertices[5] := 2;
-    Result.Normals[3] := 0;
-    Result.Normals[4] := 1;
-    Result.Normals[5] := 0;
-    Result.Texcoords[2] := 0.5;
-    Result.Texcoords[3] := 1.0;
-
-    // Vertex at (2, 0, 0)
-    Result.Vertices[6] := 2;
-    Result.Vertices[7] := 0;
-    Result.Vertices[8] := 0;
-    Result.Normals[6] := 0;
-    Result.Normals[7] := 1;
-    Result.Normals[8] := 0;
-    Result.Texcoords[4] := 1;
-    Result.Texcoords[5] := 0;
-
-    // Upload mesh data from CPU (RAM) to GPU (VRAM) memory
-    UploadMesh(@Result, False);
-  end;
+  camera: TCamera3D;
+  checked: TImage;
+  texture: TTexture2D;
+  models: array[0..NUM_MODELS - 1] of TModel;
+  position: TVector3;
+  currentModel: integer;
+  i: integer;
+  modelNames: array[0..NUM_MODELS - 1] of string;
 
 begin
-  // Initialization
-  //--------------------------------------------------------------------------------------
-  SetConfigFlags(FLAG_MSAA_4X_HINT);
-  InitWindow(ScreenWidth, ScreenHeight, 'raylib [models] example - mesh generation');
+  InitWindow(screenWidth, screenHeight, 'raylib [models] example - mesh generation');
 
-  // We generate a checked image for texturing
-  Checked := GenImageChecked(2, 2, 1, 1, RED, GREEN);
-  Texture := LoadTextureFromImage(Checked);
-  UnloadImage(Checked);
+  // Generate a checked image for texturing
+  checked := GenImageChecked(2, 2, 1, 1, RED, GREEN);
+  texture := LoadTextureFromImage(checked);
+  UnloadImage(checked);
 
-  Models[0] := LoadModelFromMesh(GenMeshPlane(2, 2, 5, 5));
-  Models[1] := LoadModelFromMesh(GenMeshCube(2.0, 1.0, 2.0));
-  Models[2] := LoadModelFromMesh(GenMeshSphere(2, 32, 32));
-  Models[3] := LoadModelFromMesh(GenMeshHemiSphere(2, 16, 16));
-  Models[4] := LoadModelFromMesh(GenMeshCylinder(1, 2, 16));
-  Models[5] := LoadModelFromMesh(GenMeshTorus(0.25, 4.0, 16, 32));
-  Models[6] := LoadModelFromMesh(GenMeshKnot(1.0, 2.0, 16, 128));
-  Models[7] := LoadModelFromMesh(GenMeshPoly(5, 2.0));
-  Models[8] := LoadModelFromMesh(GenMeshCustom());
+  // Generate all models
+  models[0] := LoadModelFromMesh(GenMeshPlane(2, 2, 4, 3));
+  models[1] := LoadModelFromMesh(GenMeshCube(2.0, 1.0, 2.0));
+  models[2] := LoadModelFromMesh(GenMeshSphere(2, 32, 32));
+  models[3] := LoadModelFromMesh(GenMeshHemiSphere(2, 16, 16));
+  models[4] := LoadModelFromMesh(GenMeshCylinder(1, 2, 16));
+  models[5] := LoadModelFromMesh(GenMeshTorus(0.25, 4.0, 16, 32));
+  models[6] := LoadModelFromMesh(GenMeshKnot(1.0, 2.0, 16, 128));
+  models[7] := LoadModelFromMesh(GenMeshPoly(5, 2.0));
+  models[8] := LoadModelFromMesh(GenMeshCustom);
 
   // Set checked texture as default diffuse component for all models material
-  for I := 0 to NUM_MODELS - 1 do
-    Models[I].Materials[0].Maps[MATERIAL_MAP_DIFFUSE].Texture := Texture;
+  for i := 0 to NUM_MODELS - 1 do
+    models[i].materials[0].maps[MATERIAL_MAP_ALBEDO].texture := texture;
 
-  // Define the camera to look into our 3d world
-  Camera := Camera3DCreate(
-    Vector3Create(5.0, 5.0, 5.0),
-    Vector3Create(0.0, 0.0, 0.0),
-    Vector3Create(0.0, 1.0, 0.0),
-    45.0,
-    0);
+  // Define the camera
+  camera.position := Vector3Create(5.0, 5.0, 5.0);
+  camera.target := Vector3Create(0.0, 0.0, 0.0);
+  camera.up := Vector3Create(0.0, 1.0, 0.0);
+  camera.fovy := 45.0;
+  camera.projection := CAMERA_PERSPECTIVE;
 
-  // Model drawing position
-  Position := Vector3Create(0, 0, 0);
+  position := Vector3Create(0.0, 0.0, 0.0);
+  currentModel := 0;
 
-  CurrentModel := 0;
+  // Model names for display
+  modelNames[0] := 'PLANE';
+  modelNames[1] := 'CUBE';
+  modelNames[2] := 'SPHERE';
+  modelNames[3] := 'HEMISPHERE';
+  modelNames[4] := 'CYLINDER';
+  modelNames[5] := 'TORUS';
+  modelNames[6] := 'KNOT';
+  modelNames[7] := 'POLY';
+  modelNames[8] := 'Custom (triangle)';
 
+  SetTargetFPS(60);
 
-
-  SetTargetFPS(60); // Set our game to run at 60 frames-per-second
-  //--------------------------------------------------------------------------------------
-  // Main game loop
   while not WindowShouldClose() do
+  begin
+    // Update
+    UpdateCamera(@camera, CAMERA_ORBITAL);
+
+    // Cycle models on mouse click
+    if IsMouseButtonPressed(MOUSE_BUTTON_LEFT) then
     begin
-      // Update
-      //----------------------------------------------------------------------------------
-      UpdateCamera(@Camera,CAMERA_ORBITAL);
+      currentModel := (currentModel + 1) mod NUM_MODELS;
+    end;
 
-      if IsMouseButtonPressed(MOUSE_BUTTON_LEFT) then
-        CurrentModel := (CurrentModel + 1) mod NUM_MODELS; // Cycle between the textures
+    // Cycle models on keyboard
+    if IsKeyPressed(KEY_RIGHT) then
+    begin
+      currentModel := (currentModel + 1) mod NUM_MODELS;
+    end
+    else if IsKeyPressed(KEY_LEFT) then
+    begin
+      currentModel := (currentModel - 1 + NUM_MODELS) mod NUM_MODELS;
+    end;
 
-      if IsKeyPressed(KEY_RIGHT) then
-      begin
-        Inc(CurrentModel);
-        if CurrentModel >= NUM_MODELS then
-          CurrentModel := 0;
-      end
-      else if IsKeyPressed(KEY_LEFT) then
-      begin
-        Dec(CurrentModel);
-        if CurrentModel < 0 then
-          CurrentModel := NUM_MODELS - 1;
-      end;
-      //----------------------------------------------------------------------------------
-
-      // Draw
-      //----------------------------------------------------------------------------------
-      BeginDrawing();
+    // Draw
+    BeginDrawing();
       ClearBackground(RAYWHITE);
 
-      BeginMode3D(Camera);
-
-       DrawModel(Models[CurrentModel], Position, 1.0, WHITE);
-       DrawGrid(10, 1.0);
-
+      BeginMode3D(camera);
+        DrawModel(models[currentModel], position, 1.0, WHITE);
+        DrawGrid(10, 1.0);
       EndMode3D();
 
+      // Info box
       DrawRectangle(30, 400, 310, 30, Fade(SKYBLUE, 0.5));
       DrawRectangleLines(30, 400, 310, 30, Fade(DARKBLUE, 0.5));
       DrawText('MOUSE LEFT BUTTON to CYCLE PROCEDURAL MODELS', 40, 410, 10, BLUE);
 
-      case CurrentModel of
-        0: DrawText('PLANE', 680, 10, 20, DARKBLUE);
-        1: DrawText('CUBE', 680, 10, 20, DARKBLUE);
-        2: DrawText('SPHERE', 680, 10, 20, DARKBLUE);
-        3: DrawText('HEMISPHERE', 640, 10, 20, DARKBLUE);
-        4: DrawText('CYLINDER', 680, 10, 20, DARKBLUE);
-        5: DrawText('TORUS', 680, 10, 20, DARKBLUE);
-        6: DrawText('KNOT', 680, 10, 20, DARKBLUE);
-        7: DrawText('POLY', 680, 10, 20, DARKBLUE);
-        8: DrawText('Custom (triangle)', 580, 10, 20, DARKBLUE);
-      end;
+      // Model name
+      if currentModel = 8 then
+        DrawText(PChar(modelNames[currentModel]), 580, 10, 20, DARKBLUE)
+      else
+        DrawText(PChar(modelNames[currentModel]), 640, 10, 20, DARKBLUE);
 
-      EndDrawing();
-    end;
+    EndDrawing();
+  end;
+
   // De-Initialization
-  //--------------------------------------------------------------------------------------
-  UnloadTexture(Texture); // Unload texture
+  UnloadTexture(texture);
+  for i := 0 to NUM_MODELS - 1 do
+  UnloadModel(models[i]);
 
-  // Unload models data (GPU VRAM)
-  for I := 0 to NUM_MODELS - 1 do
-    UnloadModel(Models[I]);
 
-  CloseWindow();        // Close window and OpenGL context
-  //--------------------------------------------------------------------------------------
+
+  CloseWindow();
 end.
-

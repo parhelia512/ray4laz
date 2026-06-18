@@ -8,43 +8,54 @@ const
   screenWidth = 800;
   screenHeight = 450;
 
+var
+  rotation: single;
+
 begin
   {$IFDEF DARWIN}
   SetExceptionMask([exDenormalized,exInvalidOp,exOverflow,exPrecision,exUnderflow,exZeroDivide]);
   {$IFEND}
 
-  InitWindow(screenWidth, screenHeight, 'raylib [shapes] example - basic shapes drawing');
+  InitWindow(screenWidth, screenHeight, 'raylib [shapes] example - basic shapes');
   SetTargetFPS(60);
+
+  rotation := 0.0;
+
   while not WindowShouldClose() do
   begin
+    rotation := rotation + 0.2;
+
     BeginDrawing();
 
         ClearBackground(RAYWHITE);
 
         DrawText('some basic shapes available on raylib', 20, 20, 20, DARKGRAY);
 
-        DrawCircle(Trunc(screenWidth/4), 120, 35, DARKBLUE);
+        DrawCircle(screenWidth div 5, 120, 35, DARKBLUE);
+        DrawCircleGradient(Vector2Create(screenWidth / 5.0, 220.0), 60, GREEN, SKYBLUE);
+        DrawCircleLines(screenWidth div 5, 340, 80, DARKBLUE);
+        DrawEllipse(screenWidth div 5, 120, 25, 20, YELLOW);
+        DrawEllipseLines(screenWidth div 5, 120, 30, 25, YELLOW);
 
-        DrawRectangle(Trunc(screenWidth/4*2) - 60, 100, 120, 60, RED);
-        DrawRectangleLines(Trunc(screenWidth/4*2) - 40, 320, 80, 60, ORANGE);  // NOTE: Uses QUADS internally, not lines
-        DrawRectangleGradientH(Trunc(screenWidth/4*2) - 90, 170, 180, 130, MAROON, GOLD);
+        DrawRectangle(screenWidth div 4 * 2 - 60, 100, 120, 60, RED);
+        DrawRectangleGradientH(screenWidth div 4 * 2 - 90, 170, 180, 130, MAROON, GOLD);
+        DrawRectangleLines(screenWidth div 4 * 2 - 40, 320, 80, 60, ORANGE);
 
-        DrawTriangle(Vector2Create(Trunc(screenWidth/4*3), 80),
-                     Vector2Create(Trunc(screenWidth/4*3) - 60, 150),
-                     Vector2Create(Trunc(screenWidth/4*3) + 60, 150), VIOLET);
+        DrawTriangle(Vector2Create(screenWidth / 4.0 * 3.0, 80.0),
+                     Vector2Create(screenWidth / 4.0 * 3.0 - 60.0, 150.0),
+                     Vector2Create(screenWidth / 4.0 * 3.0 + 60.0, 150.0), VIOLET);
 
-        DrawPoly(Vector2Create(Trunc(screenWidth/4*3), 320), 6, 80, 0, BROWN);
+        DrawTriangleLines(Vector2Create(screenWidth / 4.0 * 3.0, 160.0),
+                          Vector2Create(screenWidth / 4.0 * 3.0 - 20.0, 230.0),
+                          Vector2Create(screenWidth / 4.0 * 3.0 + 20.0, 230.0), DARKBLUE);
 
-        DrawCircleGradient(Trunc(screenWidth/4), 220, 60, GREEN, SKYBLUE);
+        DrawPoly(Vector2Create(screenWidth / 4.0 * 3.0, 330.0), 6, 80, rotation, BROWN);
+        DrawPolyLines(Vector2Create(screenWidth / 4.0 * 3.0, 330.0), 6, 90, rotation, BROWN);
+        DrawPolyLinesEx(Vector2Create(screenWidth / 4.0 * 3.0, 330.0), 6, 85, rotation, 6, BEIGE);
 
-        // NOTE: We draw all LINES based shapes together to optimize internal drawing,
-        // this way, all LINES are rendered in a single draw pass
         DrawLine(18, 42, screenWidth - 18, 42, BLACK);
-        DrawCircleLines(Trunc(screenWidth/4), 340, 80, DARKBLUE);
-        DrawTriangleLines(Vector2Create(Trunc(screenWidth/4*3), 160),
-                          Vector2Create(Trunc(screenWidth/4*3) - 20, 230),
-                          Vector2Create(Trunc(screenWidth/4*3) + 20, 230), DARKBLUE);
+
     EndDrawing();
   end;
-  CloseWindow();        // Close window and OpenGL context
+  CloseWindow();
 end.

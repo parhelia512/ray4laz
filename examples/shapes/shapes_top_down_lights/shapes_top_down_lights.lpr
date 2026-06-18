@@ -93,7 +93,7 @@ const
 
         // If we are valid, then draw the light radius to the alpha mask
         if Lights[Slot].Valid then
-          DrawCircleGradient(Trunc(Lights[Slot].Position.X), Trunc(Lights[Slot].Position.Y), Lights[Slot].OuterRadius, ColorAlpha(WHITE, 0), WHITE);
+          DrawCircleGradient(Vector2Create(Lights[Slot].Position.X, Lights[Slot].Position.Y), Lights[Slot].OuterRadius, ColorAlpha(WHITE, 0), WHITE);
 
         rlDrawRenderBatchActive();
 

@@ -46,7 +46,7 @@ begin
   // Load the crate model and apply the texture.
 
 
-  Model := R3D_LoadModel('resources/dancer.glb');
+  Model := R3D_LoadModel('resources/models/robot.glb');
 
 
   // Setup the 3D camera.

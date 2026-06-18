@@ -2,157 +2,92 @@ program models_loading_m3d;
 
 {$mode objfpc}{$H+}
 
-uses 
-cmem, rlgl,
-raylib, raymath, sysutils;
+uses cmem, raylib, sysutils;
 
 const
   screenWidth = 800;
-  screenHeight = 600;
+  screenHeight = 450;
+
+procedure DrawModelSkeleton(skeleton: TModelSkeleton; pose: TModelAnimPose; scale: Single; color: TColorB);
+var
+  i: Integer;
+  boneData: PBoneInfo;
+  poseArr: PTransform;
+begin
+  boneData := skeleton.BoneInfo;
+  poseArr := pose;
+
+  for i := 0 to skeleton.boneCount - 2 do
+  begin
+    DrawCube(poseArr[i].translation, scale * 0.05, scale * 0.05, scale * 0.05, color);
+    if boneData[i].parent >= 0 then
+      DrawLine3D(poseArr[i].translation, poseArr[boneData[i].parent].translation, color);
+  end;
+end;
 
 var
-  camera:TCamera;
-  Position: TVector3;
-  model,model2:TModel;
+  camera: TCamera3D;
+  model: TModel;
+  position: TVector3;
+  animCount: Integer;
   anims: PModelAnimation;
-  drawMesh,drawSkeleton,animPlaying : boolean;
-  animsCount: longint;
-  animFrameCounter: integer;
-  animId: integer;
-  i: integer;
-
-
-
+  animIndex: Integer;
+  animCurrentFrame: Single;
 begin
-  // Initialization
-  InitWindow(screenWidth, screenHeight, 'raylib [models] example - M3D model');
+  InitWindow(screenWidth, screenHeight, 'raylib [models] example - loading m3d');
 
-  // Define the camera to look into our 3d world
-  camera.position := Vector3Create( 1.5, 1.5, 1.5 ); // Camera position
-  camera.target := Vector3Create( 0.0, 0.4, 0.0 );      // Camera looking at point
-  camera.up := Vector3Create( 0.0, 1.0, 0.0 );          // Camera up vector (rotation towards target)
-  camera.fovy := 45.0;                                  // Camera field-of-view Y
-  camera.projection := CAMERA_PERSPECTIVE;              // Camera mode type
-  position := Vector3Create( 0, 0, 0 );                // Set model position
+  camera.position := Vector3Create(1.5, 1.5, 1.5);
+  camera.target := Vector3Create(0.0, 0.4, 0.0);
+  camera.up := Vector3Create(0.0, 1.0, 0.0);
+  camera.fovy := 45.0;
+  camera.projection := CAMERA_PERSPECTIVE;
 
-  // Load model
-  model := LoadModel(PChar(GetApplicationDirectory + 'resources/models/m3d/cesium_man.m3d')); // Load the animated model mesh and basic data
-  model2 := LoadModel(PChar(GetApplicationDirectory + 'resources/models/m3d/cesium_man.m3d')); // Load the animated model mesh and basic data
-  drawMesh := true;
-  drawSkeleton := true;
-  animPlaying := false;   // Store anim state, what to draw
+  model := LoadModel(PChar(GetApplicationDirectory + 'resources/models/m3d/cesium_man.m3d'));
+  position := Vector3Create(0.0, 0.0, 0.0);
 
-  // Load animation data
-  animsCount:= 0;
-  animFrameCounter := 0;
-  animId := 0;
-  anims := LoadModelAnimations(PChar(GetApplicationDirectory + 'resources/models/m3d/cesium_man.m3d'), @animsCount);
+  animCount := 0;
+  anims := LoadModelAnimations(PChar(GetApplicationDirectory + 'resources/models/m3d/cesium_man.m3d'), @animCount);
 
-  disableCursor;
-  SetTargetFPS(60);// Set our game to run at 60 frames-per-second
+  animIndex := 0;
+  animCurrentFrame := 0.0;
 
-  // Main game loop
+  SetTargetFPS(60);
+
   while not WindowShouldClose() do
-    begin
-      // Update
-      UpdateCamera(@camera,CAMERA_FIRST_PERSON);
-      // Play animation when spacebar is held down
-      if animsCount>=1 then
-       begin
-           // Play animation when spacebar is held down (or step one frame with N)
-           if IsKeyDown(KEY_SPACE) or IsKeyPressed(KEY_N) then
-           begin
-              Inc(animFrameCounter);//++;
+  begin
+    UpdateCamera(@camera, CAMERA_ORBITAL);
 
-               if (animFrameCounter >= anims[animId].frameCount) then animFrameCounter := 0;
+    if IsKeyPressed(KEY_RIGHT) then
+      animIndex := (animIndex + 1) mod animCount
+    else if IsKeyPressed(KEY_LEFT) then
+      animIndex := (animIndex + animCount - 1) mod animCount;
 
-               UpdateModelAnimation(model, anims[animId], animFrameCounter);
-               animPlaying := true;
-           end;
+    animCurrentFrame := animCurrentFrame + 1.0;
+    if animCurrentFrame >= anims[animIndex].keyframeCount then
+      animCurrentFrame := 0.0;
+    UpdateModelAnimation(model, anims[animIndex], Trunc(animCurrentFrame));
 
-    // Select animation by pressing A
-            if (IsKeyPressed(KEY_Z)) then
-            begin
-                animFrameCounter := 0;
-                Inc(animId);//++;
+    BeginDrawing();
+      ClearBackground(RAYWHITE);
 
-                if (animId >= animsCount) then animId := 0;
-                UpdateModelAnimation(model, anims[animId], 0);
-                animPlaying := true;
-            end;
-        end;
+      BeginMode3D(camera);
+        if not IsKeyDown(KEY_SPACE) then
+          DrawModel(model, position, 1.0, WHITE)
+        else
+          DrawModelSkeleton(model.skeleton, anims[animIndex].keyframePoses[Trunc(animCurrentFrame)], 1.0, RED);
 
-       // Toggle skeleton drawing
-        if (IsKeyPressed(KEY_X)) then drawSkeleton:= not drawSkeleton;
+        DrawGrid(10, 1.0);
+      EndMode3D();
 
-        // Toggle mesh drawing
-        if (IsKeyPressed(KEY_M)) then drawMesh:= not drawMesh;
+      DrawText(PChar(Format('Current animation: %s', [anims[animIndex].name])), 10, 10, 20, LIGHTGRAY);
+      DrawText('Press SPACE to draw skeleton', 10, 40, 20, MAROON);
+      DrawText('(c) CesiumMan model by KhronosGroup', GetScreenWidth() - 210, GetScreenHeight() - 20, 10, GRAY);
 
+    EndDrawing();
+  end;
 
-      // Draw
-      BeginDrawing();
+  UnloadModelAnimations(anims, animCount);
+  UnloadModel(model);
 
-       ClearBackground(RAYWHITE);
-        BeginMode3D(camera);
-
-         // Draw 3d model with texture
-         if (drawMesh) then  DrawModel(model, position, 1.0, WHITE);
-
-         // Draw the animated skeleton
-         if (drawSkeleton) then
-           begin
-           // Loop to (boneCount - 1) because the last one is a special "no bone" bone,
-           // needed to workaround buggy models
-           // without a -1, we would always draw a cube at the origin
-           for i := 0 to model.boneCount - 1 do
-             begin
-             // By default the model is loaded in bind-pose by LoadModel().
-             // But if UpdateModelAnimation() has been called at least once
-             // then the model is already in animation pose, so we need the animated skeleton
-             if (not animPlaying) or (animsCount<=0) then
-               begin
-               // Display the bind-pose skeleton
-               DrawCube(model.bindPose[i].translation, 0.04, 0.04, 0.04, RED);
-
-               if (model.bones[i].parent >= 0) then
-                 begin
-                   DrawLine3D(model.bindPose[i].translation,
-                   model.bindPose[model.bones[i].parent].translation, RED);
-                 end;
-               end
-                 else
-               begin
-               // Display the frame-pose skeleton
-               DrawCube(anims[animId].framePoses[animFrameCounter][i].translation, 0.05, 0.05, 0.05, RED);
-
-               if (anims[animId].bones[i].parent >= 0) then
-                 begin
-
-
-                   DrawLine3D(anims[animId].framePoses[animFrameCounter][i].translation,
-                   anims[animId].framePoses[animFrameCounter][anims[animId].bones[i].parent].translation, RED);
-                 end;
-               end;
-             end;
-           end;
-
-        DrawGrid(10, 1.0);// Draw a grid
-
-        EndMode3D();
-        DrawFPS(10,10);
-        DrawText('PRESS SPACE to PLAY MODEL ANIMATION', 10, GetScreenHeight() - 60, 10, MAROON);
-        DrawText('PRESS Z to CYCLE THROUGH ANIMATIONS', 10, GetScreenHeight() - 40, 10, DARKGRAY);
-        DrawText('PRESS M to toggle MESH, X to toggle SKELETON DRAWING', 10, GetScreenHeight() - 20, 10, DARKGRAY);
-        DrawText('(c) SpaceSuit model by Quaternius', GetScreenWidth() - 210, GetScreenHeight() - 20, 10, GRAY);
-
-      EndDrawing();
-    end;
-  // De-Initialization
-  //--------------------------------------------------------------------------------------
-  // Unload model animations data
-  UnloadModelAnimations(anims, animsCount);
-  UnloadModel(model);         // Unload model
-  CloseWindow();        // Close window and OpenGL context
-  //--------------------------------------------------------------------------------------
+  CloseWindow();
 end.
-
