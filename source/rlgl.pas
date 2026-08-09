@@ -92,15 +92,17 @@ const
   RL_CULL_DISTANCE_NEAR = 0.001;              // Default near cull distance
   RL_CULL_DISTANCE_FAR = 10000.0;             // Default far cull distance
 
-  RL_DEFAULT_SHADER_ATTRIB_NAME_POSITION     = 'vertexPosition';    // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_POSITION
-  RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD     = 'vertexTexCoord';    // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD
-  RL_DEFAULT_SHADER_ATTRIB_NAME_NORMAL       = 'vertexNormal';      // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_NORMAL
-  RL_DEFAULT_SHADER_ATTRIB_NAME_COLOR        = 'vertexColor';       // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_COLOR
-  RL_DEFAULT_SHADER_ATTRIB_NAME_TANGENT      = 'vertexTangent';     // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT
-  RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD2    = 'vertexTexCoord2';   // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2
-  RL_DEFAULT_SHADER_ATTRIB_NAME_BONEINDICES  = 'vertexBoneIndices'; // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEINDICES
-  RL_DEFAULT_SHADER_ATTRIB_NAME_BONEWEIGHTS  = 'vertexBoneWeights'; // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEWEIGHTS
+  RL_DEFAULT_SHADER_ATTRIB_NAME_POSITION     = 'vertexPosition';         // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_POSITION
+  RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD     = 'vertexTexCoord';         // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD
+  RL_DEFAULT_SHADER_ATTRIB_NAME_NORMAL       = 'vertexNormal';           // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_NORMAL
+  RL_DEFAULT_SHADER_ATTRIB_NAME_COLOR        = 'vertexColor';            // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_COLOR
+  RL_DEFAULT_SHADER_ATTRIB_NAME_TANGENT      = 'vertexTangent';          // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT
+  RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD2    = 'vertexTexCoord2';        // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2
+  RL_DEFAULT_SHADER_ATTRIB_NAME_BONEINDICES  = 'vertexBoneIndices';      // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEINDICES
+  RL_DEFAULT_SHADER_ATTRIB_NAME_BONEWEIGHTS  = 'vertexBoneWeights';      // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEWEIGHTS
   RL_DEFAULT_SHADER_ATTRIB_NAME_INSTANCETRANSFORM = 'instanceTransform'; // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_INSTANCETRANSFORM
+
+
   RL_DEFAULT_SHADER_UNIFORM_NAME_MVP         = 'mvp';               // model-view-projection matrix
   RL_DEFAULT_SHADER_UNIFORM_NAME_VIEW        = 'matView';           // view matrix
   RL_DEFAULT_SHADER_UNIFORM_NAME_PROJECTION  = 'matProjection';     // projection matrix
@@ -108,6 +110,7 @@ const
   RL_DEFAULT_SHADER_UNIFORM_NAME_NORMAL      = 'matNormal';         // normal matrix (transpose(inverse(matModelView)))
   RL_DEFAULT_SHADER_UNIFORM_NAME_COLOR       = 'colDiffuse';        // color diffuse (base tint color, multiplied by texture color)
   RL_DEFAULT_SHADER_UNIFORM_NAME_BONEMATRICES = 'boneMatrices';     // bone matrices
+
   RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE0  = 'texture0';          // texture0 (texture slot active 0)
   RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE1  = 'texture1';          // texture1 (texture slot active 1)
   RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE2  = 'texture2';          // texture2 (texture slot active 2)

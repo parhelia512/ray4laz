@@ -347,6 +347,16 @@ const
   STATE_DISABLED = 3;
 
 type
+  PGuiResult = ^TGuiResult;
+  TGuiResult = Integer;
+
+const
+  RESULT_NONE = 0;
+  RESULT_PRESSED = 1;
+  RESULT_CHANGED = 2;
+  RESULT_TAB_CLOSE = 4;     // GuiTabBar(), tab close request
+
+type
   PGuiTextAlignment = ^TGuiTextAlignment;
   TGuiTextAlignment = Integer;
 
@@ -382,7 +392,7 @@ const
   // Default -> populates to all controls when set
   DEFAULT = 0;
   // Basic controls
-  UILABEL = 1;          // Used also for: LABELBUTTON
+  LABEL_= 1;          // Used also for: LABELBUTTON
   BUTTON = 2;
   TOGGLE = 3;         // Used also for: TOGGLEGROUP
   SLIDER = 4;         // Used also for: SLIDERBAR, TOGGLESLIDER
@@ -392,7 +402,7 @@ const
   DROPDOWNBOX = 8;
   TEXTBOX = 9;        // Used also for: TEXTBOXMULTI
   VALUEBOX = 10;
-  CONTROL11 = 11;
+  TABBAR = 11;
   LISTVIEW = 12;
   COLORPICKER = 13;
   SCROLLBAR = 14;
@@ -419,6 +429,7 @@ const
   BORDER_WIDTH = 12;          // Control border size, 0 for no border
   TEXT_PADDING = 13;          // Control text padding, not considering border
   TEXT_ALIGNMENT = 14;        // Control text horizontal alignment inside control text bound (after border and padding)
+  BASEPROP16 = 15;            // Not used yet...
 
 // Gui extended properties (depend on control)
 // DEFAULT extended properties (common to all controls or global)
@@ -434,6 +445,7 @@ const
   TEXT_LINE_SPACING = 20;         // Text spacing between lines
   TEXT_ALIGNMENT_VERTICAL = 21;   // Text vertical alignment inside text bounds (after border and padding)
   TEXT_WRAP_MODE = 22;            // Text wrap-mode inside text bounds
+  EXTPROP08 = 23;                 // Not used yet...
 
 // Toggle/ToggleGroup
 type
@@ -442,6 +454,7 @@ type
 
 const
   GROUP_PADDING = 16;              // ToggleGroup separation between toggles
+  GROUP_WIDTH_FULL = 17;           // ToggleGroup bounds width considers all items: 0-Width per item, 1-Full width
 
 // Slider/SliderBar
 type
@@ -459,7 +472,7 @@ type
 
 const
   PROGRESS_PADDING = 16;           // ProgressBar internal padding
-  PROGRESS_SIDE = 17;              // ProgressBar increment side: 0-left->right, 1-right-left
+  PROGRESS_SIDE = 17;              // ProgressBar increment side: 0-left->right, 1-right->left
 
 // ScrollBar
 type
@@ -508,7 +521,7 @@ type
   TGuiTextBoxProperty = Integer;
 
 const
-  TEXT_READONLY = 16;              // TextBox in read-only mode: 0-text editable, 1-text no-editable
+  TEXT_READONLY = 16;              // TextBox in read-only mode: 0-text editable, 1-text read-only
 
 // ValueBox/Spinner
 type
@@ -518,6 +531,16 @@ type
 const
   SPINNER_BUTTON_WIDTH = 16;       // Spinner left/right buttons width
   SPINNER_BUTTON_SPACING = 17;     // Spinner buttons separation
+
+// TabBar
+type
+  PGuiTabBarProperty = ^TGuiTabBarProperty;
+  TGuiTabBarProperty = Integer;
+
+const
+  TAB_ITEMS_WIDTH = 16;            // TabBar tab items width
+  TAB_CLOSE_BUTTON = 17;           // TabBar tab close button: 0-Not shown, 1-Shown
+  TAB_LINE_SIDE = 18;              // TabBar tabs side: 0-Bottom, 1-Top
 
 // ListView
 type
@@ -607,7 +630,8 @@ function GuiWindowBox(bounds: TRectangle; const title: PAnsiChar): Integer; cdec
 function GuiGroupBox(bounds: TRectangle; const text: PAnsiChar): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiGroupBox';
 function GuiLine(bounds: TRectangle; const text: PAnsiChar): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiLine';
 function GuiPanel(bounds: TRectangle; const text: PAnsiChar): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiPanel';
-function GuiTabBar(bounds: TRectangle; text: PPAnsiChar; count: Integer; active: PInteger): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiTabBar';
+function GuiTabBar(bounds: TRectangle; const text: PAnsiChar; hscroll: PInteger; active: PInteger): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiTabBar';
+function GuiTabBarEx(bounds: TRectangle; text: PPAnsiChar; count: Integer; hscroll: PInteger; active: PInteger; focus: PInteger): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiTabBarEx';
 function GuiScrollPanel(bounds: TRectangle; const text: PAnsiChar; content: TRectangle; scroll: PVector2; view: PRectangle): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiScrollPanel';
 
 // Basic controls set
@@ -632,10 +656,10 @@ function GuiDummyRec(bounds: TRectangle; const text: PAnsiChar): Integer; cdecl;
 function GuiGrid(bounds: TRectangle; const text: PAnsiChar; spacing: Single; subdivs: Integer; mouseCell: PVector2): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiGrid';
 
 // Advance controls set
-function GuiListView(bounds: TRectangle; const text: PChar; scrollIndex: PInteger; active: PInteger): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiListView';
-function GuiListViewEx(bounds: TRectangle; text: PPChar; count: Integer; scrollIndex: PInteger; active: PInteger; focus: PInteger): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiListViewEx';
-function GuiMessageBox(bounds: TRectangle; const title, message, buttons: PAnsiChar): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiMessageBox';
-function GuiTextInputBox(bounds: TRectangle; const title, message, buttons, text: PAnsiChar; textMaxSize: Integer; secretViewActive: PBoolean): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiTextInputBox';
+function GuiListView(bounds: TRectangle; const text: PAnsiChar; scrollIndex: PInteger; active: PInteger): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiListView';
+function GuiListViewEx(bounds: TRectangle; text: PPAnsiChar; count: Integer; scrollIndex: PInteger; active: PInteger; focus: PInteger): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiListViewEx';
+function GuiMessageBox(bounds: TRectangle; const title: PAnsiChar; const message: PAnsiChar; const btnText: PAnsiChar; btnActive: PInteger): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiMessageBox';
+function GuiTextInputBox(bounds: TRectangle; const title: PAnsiChar; const message: PAnsiChar; text: PAnsiChar; textSize: Integer; const btnText: PAnsiChar; btnActive: PInteger; secretViewActive: PBoolean): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiTextInputBox';
 function GuiColorPicker(bounds: TRectangle; const text: PAnsiChar; color: PColorB): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiColorPicker';
 function GuiColorPanel(bounds: TRectangle; const text: PAnsiChar; color: PColorB): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiColorPanel';
 function GuiColorBarAlpha(bounds: TRectangle; const text: PAnsiChar; alpha: PSingle): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GuiColorBarAlpha';

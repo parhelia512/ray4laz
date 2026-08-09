@@ -307,7 +307,7 @@ const
      (* Skeleton, animation bones hierarchy *)
      PModelSkeleton = ^TModelSkeleton;
      TModelSkeleton = record
-         boneCount : Integer;          // Number of bones
+         boneCount : LongWord;          // Number of bones
          BoneInfo  : PBoneInfo;        // Bones information (skeleton)
          bindPose  : TModelAnimPose;   // Bones base transformation (Transform[])
        end;
@@ -332,7 +332,7 @@ const
      PModelAnimation = ^TModelAnimation;
      TModelAnimation = record
          name : array[0..31] of AnsiChar; // Animation name
-         boneCount: Integer;              // Number of bones (per pose)
+         boneCount: LongWord;              // Number of bones (per pose)
          keyframeCount: Integer;          // Number of animation key frames
          keyframePoses: PModelAnimPose;  // Animation sequence keyframe poses [keyframe][pose]
        end;
@@ -1257,9 +1257,9 @@ function GetFileExtension(const fileName: PAnsiChar): PAnsiChar; cdecl; external
 function GetFileName(const filePath: PAnsiChar): PAnsiChar; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GetFileName';
 {Get filename string without extension (uses static string)}
 function GetFileNameWithoutExt(const filePath: PAnsiChar): PAnsiChar; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GetFileNameWithoutExt';
-{Get full path for a given fileName with path (uses static string)}
+{Get full path for a provided fileName with path (uses static string)}
 function GetDirectoryPath(const filePath: PAnsiChar): PAnsiChar; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GetDirectoryPath';
-{Get previous directory path for a given path (uses static string)}
+{Get previous directory path for a provided path (uses static string)}
 function GetPrevDirectoryPath(const dirPath: PAnsiChar): PAnsiChar; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GetPrevDirectoryPath';
 {Get current working directory (uses static string)}
 function GetWorkingDirectory: PAnsiChar; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GetWorkingDirectory';
@@ -1271,6 +1271,10 @@ function MakeDirectory(const dirPath: PAnsiChar): Integer; cdecl; external {$IFN
 function ChangeDirectory(const dirPath: PAnsiChar): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ChangeDirectory';
 {Check if a given path is a file or a directory}
 function IsPathFile(const path: PAnsiChar): Boolean; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'IsPathFile';
+{Check if provided path points to a directory}
+function IsPathDirectory(const path: PAnsiChar): Boolean; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'IsPathDirectory';
+{Check if provided path is an absolute path}
+function IsPathAbsolute(const path: PAnsiChar): Boolean; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'IsPathAbsolute';
 {Check if fileName is valid for the platform/OS}
 function IsFileNameValid(const fileName: PAnsiChar): Boolean; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'IsFileNameValid';
 {Load directory filepaths, files and directories, no subdirs scan}
@@ -1415,7 +1419,7 @@ procedure SetMouseCursor(cursor: TMouseCursor); cdecl; external {$IFNDEF RAY_STA
 function GetTouchX: Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GetTouchX';
 {Get touch position Y for touch point 0 (relative to screen size)}
 function GetTouchY: Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GetTouchY';
-{Get touch point identifier for given index}
+{Get touch point identifier for provider index}
 function GetTouchPointId(index: Integer): Integer; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GetTouchPointId';
 {Get touch position XY for a touch point index (relative to screen size)}
 function GetTouchPosition(index: Integer): TVector2; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GetTouchPosition';
@@ -1578,7 +1582,7 @@ procedure DrawSplineSegmentBezierQuadratic(p1, c2, p3: TVector2; thick: Single; 
 {Draw spline segment: Cubic Bezier, 2 points, 2 control points}
 procedure DrawSplineSegmentBezierCubic(p1, c2, c3, p4: TVector2; thick: Single; color: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'DrawSplineSegmentBezierCubic';
 
-(* Spline segment point evaluation functions, for a given t [0.0f .. 1.0f] *)
+(* Spline segment point provider functions, for a given t [0.0f .. 1.0f] *)
 
 {Get (evaluate) spline point: Linear}
 function GetSplinePointLinear(startPos, endPos: TVector2; t: Single): TVector2; cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'GetSplinePointLinear';
@@ -1746,7 +1750,7 @@ function GetImageColor(image: TImage; x, y: Integer): TColorB; cdecl; external {
 
 (* Image drawing functions *)
 // NOTE: Image software-rendering functions (CPU)
-{Clear image background with given color}
+{Clear image background with provider color}
 procedure ImageClearBackground(dst: PImage; color: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageClearBackground';
 {Draw pixel within an image}
 procedure ImageDrawPixel(dst: PImage; posX, posY: Integer; color: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawPixel';
@@ -1776,10 +1780,14 @@ procedure ImageDrawRectangle(dst: PImage; posX, posY, width, height: Integer; co
 procedure ImageDrawRectangleV(dst: PImage; position, size: TVector2; color: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawRectangleV';
 {Draw rectangle within an image}
 procedure ImageDrawRectangleRec(dst: PImage; rec: TRectangle; color: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawRectangleRec';
+{Draw a color-filled rectangle with pro parameters within and image}
+procedure ImageDrawRectanglePro(dst: PImage; rec: TRectangle; origin: TVector2; rotation: Single; color: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawRectanglePro';
 {Draw rectangle lines within an image}
 procedure ImageDrawRectangleLines(dst: PImage; posX, posY, width, height: Integer; color: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawRectangleLines';
 {Draw rectangle lines within an image with line thickness}
 procedure ImageDrawRectangleLinesEx(dst: PImage; rec: TRectangle; thick: Integer; color: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawRectangleLinesEx';
+{Draw rectangle with gradient colors within an image, counter-clockwise color order}
+procedure ImageDrawRectangleGradientEx(dst: PImage; rec: TRectangle; col1, col2, col3, col4: TColor); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawRectangleGradientEx';
 {Draw a filled circle within an image}
 procedure ImageDrawCircle(dst: PImage; centerX, centerY, radius: Integer; color: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawCircle';
 {Draw a filled circle within an image (Vector version)}
@@ -1792,12 +1800,16 @@ procedure ImageDrawCircleLinesV(dst: PImage; center: TVector2; radius: Integer; 
 procedure ImageDrawCircleGradient(dst: PImage; center: TVector2; radius: Single; inner, outer: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawCircleGradient';
 {Draw an image within an image}
 procedure ImageDrawImage(dst: PImage; src: TImage; posX, posY: Integer; tint: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawImage';
+{Draw an image with scaling and rotation within an image}
+procedure ImageDrawImageEx(dst: PImage; src: TImage; position: TVector2; rotation, scale: Single; tint: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawImageEx';
 {Draw a part of an image defined by a rectangle within an image}
 procedure ImageDrawImageRec(dst: PImage; src: TImage; srcRec: TRectangle; position: TVector2; tint: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawImageRec';
 {Draw a part of an image defined by a rectangle into destination rectangle, with scaling and rotation, within an image}
 procedure ImageDrawImagePro(dst: PImage; src: TImage; srcRec, dstRec: TRectangle; origin: TVector2; rotation: Single; tint: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawImagePro';
 {Draw text (using default font) within an image (destination)}
 procedure ImageDrawText(dst: PImage; const text: PAnsiChar; posX, posY, fontSize: Integer; color: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawText';
+{Draw text using Font and pro parameters (rotation)}
+procedure ImageDrawTextPro(dst: PImage; font: TFont; const text: PAnsiChar; position, origin: TVector2; rotation, fontSize, spacing: Single; tint: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawTextPro';
 {Draw text (custom sprite font) within an image (destination)}
 procedure ImageDrawTextEx(dst: PImage; font: TFont; const text: PAnsiChar; position: TVector2; fontSize, spacing: Single; tint: TColorB); cdecl; external {$IFNDEF RAY_STATIC}cDllName{$ENDIF} name 'ImageDrawTextEx';
 {Load texture from file into GPU memory (VRAM)}
